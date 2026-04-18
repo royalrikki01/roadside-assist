@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - RoadHelp</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">🚗</div>
+      <span class="logo-text">Road<span>Help</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="register.html" class="btn-nav">Register Karo</a>
+    </div>
+  </nav>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <h2>Wapas Aao! 👋</h2>
+      <p class="subtitle">Apne account mein login karo</p>
+
+      <div id="errorMsg" style="display:none; background: rgba(255,68,68,0.1); color: var(--danger); padding: 10px 14px; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem;"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="aapka@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Password daalo" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 0.8rem;">
+          Login Karo
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Account nahi hai? <a href="register.html">Register karo</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api';
+
+    // Agar pehle se logged in hai toh redirect karo
+    const token = localStorage.getItem('ra_token');
+    const user = JSON.parse(localStorage.getItem('ra_user') || 'null');
+    if (token && user) {
+      window.location.href = user.role === 'owner' ? 'owner-dashboard.html' : 'technician-dashboard.html';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Login ho raha hai...';
+
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.style.display = 'none';
+
+      try {
+        const res = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+
+        localStorage.setItem('ra_token', data.token);
+        localStorage.setItem('ra_user', JSON.stringify(data.user));
+
+        window.location.href = data.user.role === 'owner' ? 'owner-dashboard.html' : 'technician-dashboard.html';
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Login Karo';
+      }
+    });
+  </script>
+</body>
+</html>

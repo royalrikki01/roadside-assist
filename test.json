@@ -1,0 +1,9 @@
+{
+  "name": "Rajesh Mechanic",
+  "email": "rajesh.tech@example.com",
+  "phone": "9876543210",
+  "password": "password123",
+  "role": "technician",
+  "skills": ["Tyre Puncture", "Engine Repair"],
+  "vehicleTypes": ["Car", "Bike"]
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technician Dashboard - RoadHelp</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">🔧</div>
+      <span class="logo-text">Road<span>Help</span></span>
+    </a>
+    <div class="nav-links">
+      <span id="navName" style="color: rgba(255,255,255,0.8); font-size:0.9rem;"></span>
+      <button onclick="logout()" class="btn btn-sm" style="background:rgba(255,255,255,0.1); color:white;">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="dashboard">
+    <div class="dashboard-body">
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+
+        <!-- Location Status -->
+        <div class="location-status" id="locationStatus">
+          <div class="location-dot"></div>
+          <span>Location detect ho rahi hai...</span>
+        </div>
+
+        <!-- Availability Toggle -->
+        <div class="card">
+          <div class="card-title">🟢 Availability</div>
+          <div class="availability-toggle">
+            <div>
+              <div class="toggle-label">Available Hoon</div>
+              <div class="toggle-status" id="availabilityText">Abhi offline hoon</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="availabilityToggle" onchange="toggleAvailability()">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <p style="font-size:0.78rem; color:var(--text-light); margin-top:8px;">
+            Available ON karo taaki vehicle owners aapko dhundh sakein
+          </p>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="card">
+          <div class="card-title">👤 Mera Profile</div>
+          <div id="profileInfo"></div>
+        </div>
+
+        <!-- Active Job -->
+        <div id="activeJobPanel" style="display:none;" class="card">
+          <div class="card-title">🔧 Active Job</div>
+          <div id="activeJobInfo"></div>
+          <div style="display:flex; gap:8px; margin-top:1rem; flex-wrap:wrap;">
+            <button class="btn btn-success btn-sm" onclick="completeJob()">✅ Job Complete</button>
+          </div>
+        </div>
+
+        <!-- Chat (during active job) -->
+        <div id="chatSection" style="display:none;" class="card">
+          <div class="card-title">💬 Owner se Baat Karo</div>
+          <div class="chat-box">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-row">
+              <input type="text" id="chatInput" placeholder="Message likho..." onkeydown="if(event.key==='Enter') sendMessage()">
+              <button class="btn btn-primary btn-sm" onclick="sendMessage()">Bhejo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nearby Requests -->
+        <div class="card">
+          <div class="card-title">📍 Aaspaas ki Requests</div>
+          <div id="nearbyRequests">
+            <div class="empty-state">
+              <div class="empty-icon">📡</div>
+              <h4>Available ON karo</h4>
+              <p>Taaki nearby requests dikhen</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Map -->
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- Incoming Request Modal -->
+  <div class="modal-overlay" id="incomingModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🆘 Naya Emergency Request!</h3>
+      </div>
+
+      <div style="background:rgba(255,68,68,0.08); border:2px solid rgba(255,68,68,0.2); border-radius:12px; padding:1.2rem; margin-bottom:1.5rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.8rem;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-light); margin-bottom:3px;">Owner</div>
+            <div style="font-weight:600;" id="incOwnerName">-</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-light); margin-bottom:3px;">Phone</div>
+            <div style="font-weight:600;" id="incOwnerPhone">-</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-light); margin-bottom:3px;">Vehicle</div>
+            <div style="font-weight:600;" id="incVehicleType">-</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-light); margin-bottom:3px;">Problem</div>
+            <div style="font-weight:600;" id="incProblem">-</div>
+          </div>
+        </div>
+        <div style="margin-top:0.8rem;" id="incDescWrapper">
+          <div style="font-size:0.75rem; color:var(--text-light); margin-bottom:3px;">Detail</div>
+          <div id="incDescription" style="font-size:0.9rem;"></div>
+        </div>
+        <div id="incLocationInfo" style="margin-top:0.8rem; font-size:0.85rem; color:var(--text-light);"></div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+        <button class="btn btn-danger" onclick="rejectRequest()">❌ Reject</button>
+        <button class="btn btn-success" onclick="acceptRequest()" id="acceptBtn">✅ Accept</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="js/technician.js"></script>
+</body>
+</html>

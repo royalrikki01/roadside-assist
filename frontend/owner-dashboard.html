@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Dashboard - RoadHelp</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">🚗</div>
+      <span class="logo-text">Road<span>Help</span></span>
+    </a>
+    <div class="nav-links">
+      <span id="navName" style="color: rgba(255,255,255,0.8); font-size:0.9rem;"></span>
+      <button onclick="logout()" class="btn btn-sm" style="background:rgba(255,255,255,0.1); color:white;">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="dashboard">
+    <div class="dashboard-body">
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+
+        <!-- Location Status -->
+        <div class="location-status" id="locationStatus">
+          <div class="location-dot"></div>
+          <span>Location detect ho rahi hai...</span>
+        </div>
+
+        <!-- SOS / Active State -->
+        <div id="sosPanelWrapper">
+          <!-- No active request -->
+          <div id="noRequestPanel">
+            <button class="sos-btn" id="sosBtn" onclick="openSOSModal()">
+              🆘 EMERGENCY SOS
+            </button>
+            <p style="text-align:center; color:var(--text-light); font-size:0.82rem; margin-top:8px;">
+              Gaadi kharab hone par dabao
+            </p>
+          </div>
+
+          <!-- Active request panel -->
+          <div id="activeRequestPanel" style="display:none;">
+            <div class="active-request-panel" id="activeRequestInfo">
+              <h4>Active Request</h4>
+              <h3 id="activeRequestStatus">Technician dhundha ja raha hai...</h3>
+              <p id="activeRequestProblem"></p>
+            </div>
+            <button class="btn btn-danger btn-full" style="margin-top:0.8rem;" onclick="cancelRequest()">
+              Request Cancel Karo
+            </button>
+          </div>
+        </div>
+
+        <!-- Nearby Technicians -->
+        <div class="card" id="nearbySection" style="display:none;">
+          <div class="card-title">🔧 Nearby Technicians</div>
+          <div id="techniciansList">
+            <div class="empty-state">
+              <div class="empty-icon">🔍</div>
+              <h4>Dhundh rahe hain...</h4>
+              <p>Aaspaas ke technicians load ho rahe hain</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Technician Info (after accept) -->
+        <div id="technicianInfoPanel" style="display:none;" class="card">
+          <div class="card-title">✅ Technician Aa Raha Hai!</div>
+          <div id="acceptedTechInfo"></div>
+          <div style="display:flex; gap:8px; margin-top:1rem;">
+            <button class="btn btn-success btn-sm" onclick="completeRequest()">✅ Complete Karo</button>
+          </div>
+        </div>
+
+        <!-- Chat -->
+        <div id="chatSection" style="display:none;" class="card">
+          <div class="card-title">💬 Technician se Baat Karo</div>
+          <div class="chat-box">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-row">
+              <input type="text" id="chatInput" placeholder="Message likho..." onkeydown="if(event.key==='Enter') sendMessage()">
+              <button class="btn btn-primary btn-sm" onclick="sendMessage()">Bhejo</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div class="card">
+          <div class="card-title">📋 Recent Requests</div>
+          <div id="historyList">
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <p>Abhi tak koi request nahi</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Map -->
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- SOS Modal -->
+  <div class="modal-overlay" id="sosModal" style="display:none;">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🆘 Help Request Bhejo</h3>
+        <button class="modal-close" onclick="closeSOSModal()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label>Vehicle Type</label>
+        <select id="vehicleType">
+          <option value="">Select karo</option>
+          <option>Car</option>
+          <option>Bike</option>
+          <option>Truck</option>
+          <option>Auto Rickshaw</option>
+          <option>Bus</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Kya problem hai?</label>
+        <div class="problem-grid">
+          <div class="problem-btn" onclick="selectProblem(this, 'Tyre Puncture')">
+            <span class="problem-icon">🔵</span>Tyre Puncture
+          </div>
+          <div class="problem-btn" onclick="selectProblem(this, 'Engine Problem')">
+            <span class="problem-icon">⚙️</span>Engine
+          </div>
+          <div class="problem-btn" onclick="selectProblem(this, 'Battery Dead')">
+            <span class="problem-icon">🔋</span>Battery
+          </div>
+          <div class="problem-btn" onclick="selectProblem(this, 'Fuel Empty')">
+            <span class="problem-icon">⛽</span>Fuel Khatam
+          </div>
+          <div class="problem-btn" onclick="selectProblem(this, 'Electrical Issue')">
+            <span class="problem-icon">⚡</span>Electrical
+          </div>
+          <div class="problem-btn" onclick="selectProblem(this, 'Other')">
+            <span class="problem-icon">🔧</span>Other
+          </div>
+        </div>
+        <input type="hidden" id="problemType">
+      </div>
+
+      <div class="form-group">
+        <label>Thodi aur detail (optional)</label>
+        <textarea id="problemDesc" rows="3" placeholder="Problem ke baare mein batao..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Aapki location</label>
+        <div class="location-status">
+          <div class="location-dot"></div>
+          <span id="modalLocationText">Location detect ho rahi hai...</span>
+        </div>
+      </div>
+
+      <button class="btn btn-danger btn-full btn-lg" onclick="sendSOSRequest()" id="sendSOSBtn" style="margin-top:1rem;">
+        🆘 Help Maango!
+      </button>
+    </div>
+  </div>
+
+  <!-- Rating Modal -->
+  <div class="modal-overlay" id="ratingModal" style="display:none;">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h3>⭐ Technician ko Rate Karo</h3>
+      </div>
+      <p style="color:var(--text-light); margin-bottom:1rem;">
+        Is baar ka experience kaisa raha? Apni rating do.
+      </p>
+      <div class="star-rating" id="starRating">
+        <span class="star" onclick="setRating(1)">★</span>
+        <span class="star" onclick="setRating(2)">★</span>
+        <span class="star" onclick="setRating(3)">★</span>
+        <span class="star" onclick="setRating(4)">★</span>
+        <span class="star" onclick="setRating(5)">★</span>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="submitRating()" style="margin-top:1rem;">
+        Rating Do
+      </button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="js/owner.js"></script>
+</body>
+</html>
