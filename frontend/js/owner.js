@@ -452,6 +452,177 @@ function logout() {
   window.location.href = 'login.html';
 }
 
+// ===== VEHICLE INFORMATION =====
+let currentStream = null;
+let canvas = null;
+
+function previewVehiclePhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('vehiclePhotoPreview');
+    const placeholder = document.getElementById('photoPlaceholder');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function startCameraCapture() {
+  try {
+    const modal = document.getElementById('cameraModal');
+    const videoElement = document.getElementById('cameraStream');
+    
+    // Request camera access
+    currentStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }, // Back camera on mobile
+      audio: false
+    });
+    
+    videoElement.srcObject = currentStream;
+    modal.style.display = 'flex';
+    
+    // Wait for video to load
+    await new Promise((resolve) => {
+      videoElement.onloadedmetadata = () => {
+        videoElement.play();
+        resolve();
+      };
+    });
+  } catch (err) {
+    showToast('error', 'Camera Error', 'Camera access nahi mil saka: ' + err.message);
+  }
+}
+
+function capturePhoto() {
+  try {
+    const videoElement = document.getElementById('cameraStream');
+    
+    // Create canvas if not exists
+    if (!canvas) {
+      canvas = document.createElement('canvas');
+    }
+    
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoElement, 0, 0);
+    
+    // Convert canvas to image and display
+    const preview = document.getElementById('vehiclePhotoPreview');
+    const placeholder = document.getElementById('photoPlaceholder');
+    
+    preview.src = canvas.toDataURL('image/jpeg');
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    
+    // Store the data URL in the file input (as base64)
+    // We'll handle this in saveVehicleInfo function
+    document.getElementById('vehiclePhotoInput').dataset.cameraCapture = preview.src;
+    
+    stopCameraCapture();
+  } catch (err) {
+    showToast('error', 'Error', 'Photo capture mein error: ' + err.message);
+  }
+}
+
+function stopCameraCapture() {
+  try {
+    const modal = document.getElementById('cameraModal');
+    const videoElement = document.getElementById('cameraStream');
+    
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+      currentStream = null;
+    }
+    
+    modal.style.display = 'none';
+    videoElement.srcObject = null;
+  } catch (err) {
+    console.error('Error stopping camera:', err);
+  }
+}
+
+async function saveVehicleInfo(event) {
+  try {
+    const description = document.getElementById('vehicleDesc').value;
+    const photoInput = document.getElementById('vehiclePhotoInput');
+    const preview = document.getElementById('vehiclePhotoPreview');
+    
+    let photo = '';
+
+    // Check if photo is captured from camera
+    const cameraCapture = photoInput.dataset.cameraCapture;
+    if (cameraCapture) {
+      photo = cameraCapture;
+    } 
+    // Or check if file is selected
+    else if (photoInput.files.length > 0) {
+      photo = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(photoInput.files[0]);
+      });
+    } 
+    // Or check if preview exists (from file selection)
+    else if (preview.style.display !== 'none' && preview.src) {
+      photo = preview.src;
+    }
+
+    if (!description.trim()) {
+      showToast('error', 'Error', 'Vehicle ke baare mein kuch likho!');
+      return;
+    }
+
+    if (!photo) {
+      showToast('error', 'Error', 'Photo upload karo ya camera se lelo!');
+      return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Save ho raha hai...';
+
+    const res = await fetch(`${API}/auth/vehicle-info`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        description,
+        photo
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
+
+    showToast('success', '✅ Saved!', 'Vehicle info save ho gaya!');
+    
+    // Reset form
+    document.getElementById('vehicleDesc').value = '';
+    document.getElementById('vehiclePhotoPreview').style.display = 'none';
+    document.getElementById('photoPlaceholder').style.display = 'block';
+    photoInput.value = '';
+    photoInput.dataset.cameraCapture = '';
+    
+    btn.disabled = false;
+    btn.textContent = '💾 Save Karo';
+  } catch (err) {
+    showToast('error', 'Error', err.message);
+    if (event.target) {
+      event.target.disabled = false;
+      event.target.textContent = '💾 Save Karo';
+    }
+  }
+}
+
 // ===== CHECK ACTIVE REQUEST =====
 async function checkActiveRequest() {
   try {

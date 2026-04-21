@@ -80,4 +80,31 @@ router.patch('/availability', authMiddleware, async (req, res) => {
   }
 });
 
+// Update vehicle info (owner only)
+router.patch('/vehicle-info', authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== 'owner') return res.status(403).json({ message: 'Sirf owner ke liye' });
+    
+    const { description, photo } = req.body;
+    
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { 
+        $set: {
+          'vehicleInfo.description': description || '',
+          'vehicleInfo.photo': photo || ''
+        }
+      },
+      { new: true }
+    ).select('-password');
+    
+    res.json({ 
+      message: 'Vehicle info save ho gaya!',
+      user 
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

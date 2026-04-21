@@ -94,6 +94,49 @@
           </div>
         </div>
 
+        <!-- Vehicle Information -->
+        <div class="card">
+          <div class="card-title">🚗 Aapki Vehicle Ki Info</div>
+          <div id="vehicleSection">
+            <div class="form-group">
+              <label>Vehicle ke baare mein likho</label>
+              <textarea id="vehicleDesc" placeholder="Example: Maruti Swift, White, 2020, ABC-1234" rows="3" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; font-family:Poppins;"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Vehicle ki Photo Upload ya Capture Karo</label>
+              <div style="display:flex; gap:10px; margin-bottom:1rem;">
+                <button class="btn btn-sm" style="flex:1; background:#4CAF50; color:white;" onclick="document.getElementById('vehiclePhotoInput').click()">
+                  📁 File Select Karo
+                </button>
+                <button class="btn btn-sm" style="flex:1; background:#2196F3; color:white;" onclick="startCameraCapture()">
+                  📷 Camera Se Le
+                </button>
+              </div>
+              
+              <!-- Camera capture modal -->
+              <div id="cameraModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:2000; display:none; align-items:center; justify-content:center; flex-direction:column; gap:1rem;">
+                <video id="cameraStream" style="max-width:100%; max-height:70vh; border-radius:8px; background:black;"></video>
+                <div style="display:flex; gap:10px; justify-content:center;">
+                  <button class="btn" style="background:#4CAF50; color:white;" onclick="capturePhoto()">📸 Capture Karo</button>
+                  <button class="btn" style="background:#F44336; color:white;" onclick="stopCameraCapture()">❌ Cancel</button>
+                </div>
+              </div>
+              
+              <div class="upload-area" onclick="document.getElementById('vehiclePhotoInput').click()">
+                <div id="photoPlaceholder" style="text-align:center; padding:20px;">
+                  <div style="font-size:2rem; margin-bottom:8px;">📸</div>
+                  <p style="color:var(--text-light); font-size:0.9rem;">Upar buttons use karo</p>
+                </div>
+                <img id="vehiclePhotoPreview" style="max-width:100%; border-radius:8px; display:none;">
+              </div>
+              <input type="file" id="vehiclePhotoInput" accept="image/*" style="display:none;" onchange="previewVehiclePhoto(event)">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveVehicleInfo()" style="margin-top:0.8rem;">
+              💾 Save Karo
+            </button>
+          </div>
+        </div>
+
         <!-- History -->
         <div class="card">
           <div class="card-title">📋 Recent Requests</div>

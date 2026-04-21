@@ -22,6 +22,13 @@ const userSchema = new mongoose.Schema({
   },
 
   profilePic: { type: String, default: '' },
+
+  // Owner vehicle information
+  vehicleInfo: {
+    description: { type: String, default: '' },
+    photo: { type: String, default: '' }  // Base64 or file path
+  },
+
   createdAt: { type: Date, default: Date.now }
 });
 
