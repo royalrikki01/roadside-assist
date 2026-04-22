@@ -1,0 +1,15 @@
+{
+  "name": "mcp-jarvis",
+  "version": "1.0.0",
+  "description": "JARVIS — Just A Rather Very Intelligent System. MCP server with full AI assistant capabilities.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "node-fetch": "^3.3.2",
+    "zod": "^3.22.4"
+  }
+}
